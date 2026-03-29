@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin — II SIS UniRV</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --dark: #0D1B6E; --mid: #1565C0; --light: #29ABE2;
+  --pale: #E8F4FB; --surface: #fff; --bg: #F0F6FB;
+  --border: #C5DFF0; --text: #0A1547; --muted: #5A7A9A;
+  --green: #2E7D32; --green-bg: #E8F5E9;
+  --red: #C62828; --red-bg: #FFEBEE;
+  --yellow: #8A6200; --yellow-bg: #FFF3CD;
+}
+body { font-family: 'Raleway', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 60%, var(--light) 100%);
+}
+.login-box {
+  background: white; border-radius: 16px; padding: 2.5rem;
+  width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.login-box h1 {
+  font-size: 1.3rem; font-weight: 700; color: var(--dark);
+  margin-bottom: 0.25rem;
+}
+.login-box p { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.75rem; }
+.login-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 1rem; }
+.login-field label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.login-field input {
+  font-family: 'Raleway', sans-serif; font-size: 0.92rem;
+  padding: .65rem .9rem; border: 1.5px solid var(--border);
+  border-radius: 8px; background: var(--bg); outline: none;
+  transition: border-color .2s;
+}
+.login-field input:focus { border-color: var(--mid); }
+.login-err { font-size: 0.8rem; color: var(--red); margin-bottom: .75rem; display: none; }
+.login-err.show { display: block; }
+.btn-login {
+  width: 100%; padding: .75rem; font-family: 'Raleway', sans-serif;
+  font-size: .92rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--dark), var(--mid));
+  color: white; border: none; border-radius: 8px; cursor: pointer;
+  transition: opacity .2s;
+}
+.btn-login:hover { opacity: .9; }
+
+/* MAIN */
+#admin-screen { display: none; }
+header {
+  background: linear-gradient(135deg, var(--dark), var(--mid));
+  padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+}
+.hdr-left h1 { font-size: 1rem; font-weight: 700; color: white; }
+.hdr-left p { font-size: 0.75rem; color: rgba(255,255,255,.65); }
+.hdr-right { display: flex; gap: .75rem; align-items: center; }
+.btn-sair {
+  font-family: 'Raleway', sans-serif; font-size: .78rem; font-weight: 600;
+  padding: .4rem .9rem; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.3);
+  background: transparent; color: white; cursor: pointer;
+  transition: background .2s;
+}
+.btn-sair:hover { background: rgba(255,255,255,.1); }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.stat {
+  background: white; border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.25rem; text-align: center;
+}
+.stat-n { font-size: 2rem; font-weight: 700; color: var(--dark); line-height: 1; margin-bottom: .3rem; }
+.stat-l { font-size: .75rem; color: var(--muted); font-weight: 600; }
+.stat.accent { background: linear-gradient(135deg, var(--dark), var(--mid)); }
+.stat.accent .stat-n, .stat.accent .stat-l { color: white; }
+.stat.accent .stat-l { opacity: .75; }
+
+/* TOOLBAR */
+.toolbar {
+  display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.toolbar input, .toolbar select {
+  font-family: 'Raleway', sans-serif; font-size: .85rem;
+  padding: .55rem .9rem; border: 1.5px solid var(--border);
+  border-radius: 8px; background: white; outline: none;
+  transition: border-color .2s;
+}
+.toolbar input { flex: 1; min-width: 200px; }
+.toolbar input:focus, .toolbar select:focus { border-color: var(--mid); }
+.btn-export {
+  font-family: 'Raleway', sans-serif; font-size: .82rem; font-weight: 700;
+  padding: .55rem 1.1rem; border-radius: 8px; border: none;
+  background: var(--green); color: white; cursor: pointer; transition: opacity .2s;
+  white-space: nowrap;
+}
+.btn-export:hover { opacity: .88; }
+
+/* TABLE */
+.table-wrap { background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+thead { background: var(--pale); }
+th {
+  padding: .75rem 1rem; text-align: left;
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--pale); }
+.badge {
+  display: inline-block; font-size: .68rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 100px;
+}
+.badge-pendente { background: var(--yellow-bg); color: var(--yellow); }
+.badge-confirmado { background: var(--green-bg); color: var(--green); }
+.badge-cancelado { background: var(--red-bg); color: var(--red); }
+.comp-link {
+  color: var(--mid); text-decoration: none; font-weight: 600; font-size: .78rem;
+}
+.comp-link:hover { text-decoration: underline; }
+.btn-status {
+  font-family: 'Raleway', sans-serif; font-size: .7rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border);
+  background: white; cursor: pointer; color: var(--muted); transition: all .2s;
+}
+.btn-status:hover { background: var(--pale); border-color: var(--mid); color: var(--mid); }
+
+.empty { text-align: center; padding: 3rem; color: var(--muted); font-size: .88rem; }
+.loading { text-align: center; padding: 2rem; color: var(--muted); }
+
+/* PAGINACAO */
+.pag { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: .82rem; color: var(--muted); }
+.pag-btns { display: flex; gap: .5rem; }
+.pag-btn {
+  font-family: 'Raleway', sans-serif; font-size: .78rem; font-weight: 600;
+  padding: .4rem .9rem; border-radius: 7px; border: 1.5px solid var(--border);
+  background: white; cursor: pointer; color: var(--text); transition: all .2s;
+}
+.pag-btn:hover:not(:disabled) { border-color: var(--mid); color: var(--mid); }
+.pag-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* MODAL comprovante */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.6); z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: white; border-radius: 14px; padding: 1.5rem;
+  max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;
+}
+.modal h3 { font-size: 1rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem; }
+.modal img { width: 100%; border-radius: 8px; margin-bottom: 1rem; }
+.modal-close {
+  font-family: 'Raleway', sans-serif; font-size: .85rem; font-weight: 600;
+  padding: .6rem 1.25rem; border-radius: 8px; border: 1.5px solid var(--border);
+  background: white; cursor: pointer; color: var(--muted);
+}
+.modal-close:hover { background: var(--pale); }
+
+@media (max-width: 700px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  header { padding: 1rem; }
+  .container { padding: 1rem; }
+  table { font-size: .75rem; }
+  th, td { padding: .6rem .7rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Painel Admin — II SIS</h1>
+    <p>Acesso restrito à organização do evento.</p>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="usr" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
+    <button class="btn-login" onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <header>
+    <div class="hdr-left">
+      <h1>Painel de Inscrições — II SIS UniRV</h1>
+      <p>12 e 13 de junho de 2026 · Campus Luziânia</p>
+    </div>
+    <div class="hdr-right">
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- STATS -->
+    <div class="stats" id="stats">
+      <div class="stat accent"><div class="stat-n" id="s-total">—</div><div class="stat-l">Total inscritos</div></div>
+      <div class="stat"><div class="stat-n" id="s-pend" style="color:var(--yellow)">—</div><div class="stat-l">Pendentes</div></div>
+      <div class="stat"><div class="stat-n" id="s-conf" style="color:var(--green)">—</div><div class="stat-l">Confirmados</div></div>
+      <div class="stat"><div class="stat-n" id="s-canc" style="color:var(--red)">—</div><div class="stat-l">Cancelados</div></div>
+    </div>
+
+    <!-- VAGAS POR OPÇÃO -->
+    <div id="vagas-painel" style="margin-bottom:1.5rem;"></div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <input type="text" id="busca" placeholder="Buscar por nome, CPF ou e-mail..." oninput="filtrar()">
+      <select id="filtro-status" onchange="filtrar()">
+        <option value="">Todos os status</option>
+        <option value="pendente">Pendente</option>
+        <option value="confirmado">Confirmado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+      <select id="filtro-palestra" onchange="filtrar()">
+        <option value="">Todas as palestras</option>
+      </select>
+      <select id="filtro-minicurso" onchange="filtrar()">
+        <option value="">Todos os minicursos</option>
+      </select>
+      <input type="date" id="filtro-data" onchange="filtrar()" title="Filtrar por data de inscrição">
+      <button class="btn-export" style="background:var(--mid)" onclick="carregar()" title="Atualizar dados">↻ Atualizar</button>
+      <button class="btn-export" onclick="exportarCSV()">⬇ Lista Geral (CSV)</button>
+      <button class="btn-export" style="background:#5C3D99" onclick="exportarListaPalestra()">⬇ Lista por Palestra</button>
+      <button class="btn-export" style="background:#2E7D32" onclick="exportarListaMinicurso()">⬇ Lista por Minicurso</button>
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>WhatsApp</th>
+            <th>E-mail</th>
+            <th>Palestras</th>
+            <th>Minicurso</th>
+            <th>Comprovante</th>
+            <th>Check-in</th>
+            <th>Status</th>
+            <th>Protocolo</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="11" class="loading">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pag">
+      <span id="pag-info">—</span>
+      <div class="pag-btns">
+        <button class="pag-btn" id="btn-prev" onclick="pagAnterior()" disabled>← Anterior</button>
+        <button class="pag-btn" id="btn-next" onclick="pagProxima()">Próxima →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3>Comprovante de pagamento</h3>
+    <img id="modal-img" src="" alt="Comprovante">
+    <br>
+    <button class="modal-close" onclick="fecharModal()">Fechar</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL = 'https://gzrxrqdmggeeklhwmsbj.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6cnhycWRtZ2dlZWtsaHdtc2JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNDc3NDUsImV4cCI6MjA4OTYyMzc0NX0.XSrVHHXxySpzPG1bUb4szX9maRH9r7Q-P9KFaml36ac';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'sis2026';
+
+let todos = [], filtrados = [], pagina = 0;
+const POR_PAG = 20;
+
+// ── LOGIN ──
+function login() {
+  const u = document.getElementById('usr').value.trim();
+  const p = document.getElementById('pwd').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    sessionStorage.setItem('sis_admin', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    carregar();
+  } else {
+    document.getElementById('login-err').classList.add('show');
+  }
+}
+function sair() { sessionStorage.removeItem('sis_admin'); location.reload(); }
+
+// ── CARREGAR ──
+async function carregar() {
+  document.getElementById('tbody').innerHTML = '<tr><td colspan="12" class="loading">Carregando...</td></tr>';
+  const { data, error } = await sb.from('inscricoes').select('*').order('criado_em', { ascending: false });
+  if (error) { alert('Erro ao carregar: ' + error.message); return; }
+  todos = data || [];
+  atualizarStats();
+  renderVagas();
+  popularFiltros();
+  filtrar();
+}
+
+function atualizarStats() {
+  const ativos = todos.filter(i => i.status !== 'cancelado');
+  document.getElementById('s-total').textContent = ativos.length;
+  document.getElementById('s-pend').textContent = todos.filter(i=>i.status==='pendente').length;
+  document.getElementById('s-conf').textContent = todos.filter(i=>i.status==='confirmado').length;
+  document.getElementById('s-canc').textContent = todos.filter(i=>i.status==='cancelado').length;
+}
+
+// ── CONTADOR DE VAGAS ──
+function renderVagas() {
+  const ativos = todos.filter(i => i.status !== 'cancelado');
+  const palestras = [...new Set(ativos.flatMap(i => i.palestras || []))].sort();
+  const minicursos = [...new Set(ativos.map(i => i.minicurso).filter(Boolean))].sort();
+
+  const vagasPalestra = palestras.map(p => {
+    const n = ativos.filter(i => (i.palestras||[]).includes(p)).length;
+    return `<div style="font-size:.78rem;padding:.4rem .75rem;background:var(--pale);border:1px solid var(--border);border-radius:8px;"><b>${p}</b>: ${n} inscrito(s)</div>`;
+  }).join('');
+
+  const vagasMinicurso = minicursos.map(m => {
+    const n = ativos.filter(i => i.minicurso === m).length;
+    return `<div style="font-size:.78rem;padding:.4rem .75rem;background:#E8F5E9;border:1px solid #C8E6C9;border-radius:8px;"><b>${m}</b>: ${n} inscrito(s)</div>`;
+  }).join('');
+
+  document.getElementById('vagas-painel').innerHTML = palestras.length === 0 ? '' : `
+    <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:.5rem;">
+      <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem;">Inscritos por palestra satélite</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;">${vagasPalestra}</div>
+    </div>
+    <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem;">
+      <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem;">Inscritos por minicurso</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;">${vagasMinicurso}</div>
+    </div>`;
+}
+
+function popularFiltros() {
+  const palestras = [...new Set(todos.flatMap(i => i.palestras || []))].sort();
+  const minicursos = [...new Set(todos.map(i => i.minicurso).filter(Boolean))].sort();
+  document.getElementById('filtro-palestra').innerHTML = '<option value="">Todas as palestras</option>' + palestras.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('filtro-minicurso').innerHTML = '<option value="">Todos os minicursos</option>' + minicursos.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+// ── FILTRAR ──
+function filtrar() {
+  const busca = document.getElementById('busca').value.toLowerCase();
+  const status = document.getElementById('filtro-status').value;
+  const palestra = document.getElementById('filtro-palestra').value;
+  const minicurso = document.getElementById('filtro-minicurso').value;
+  const data = document.getElementById('filtro-data').value;
+
+  filtrados = todos.filter(i => {
+    const matchBusca = !busca || (i.nome||'').toLowerCase().includes(busca) || (i.cpf||'').includes(busca) || (i.email||'').toLowerCase().includes(busca);
+    const matchStatus = !status || i.status === status;
+    const matchP = !palestra || (i.palestras||[]).includes(palestra);
+    const matchM = !minicurso || i.minicurso === minicurso;
+    const matchData = !data || new Date(i.criado_em).toISOString().slice(0,10) === data;
+    return matchBusca && matchStatus && matchP && matchM && matchData;
+  });
+  pagina = 0;
+  renderTabela();
+}
+
+// ── RENDERIZAR ──
+function renderTabela() {
+  const inicio = pagina * POR_PAG;
+  const fim = inicio + POR_PAG;
+  const items = filtrados.slice(inicio, fim);
+  const tbody = document.getElementById('tbody');
+
+  if (filtrados.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">Nenhuma inscrição encontrada.</td></tr>';
+    document.getElementById('pag-info').textContent = '0 inscrições';
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    return;
+  }
+
+  tbody.innerHTML = items.map((i, idx) => {
+    const n = inicio + idx + 1;
+    const data = new Date(i.criado_em).toLocaleDateString('pt-BR');
+    const hora = new Date(i.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    const palestras = (i.palestras||[]).join('<br>');
+    const comp = i.comprovante_url ? `<a class="comp-link" href="${i.comprovante_url}" target="_blank">Ver arquivo</a>` : '<span style="color:var(--muted)">—</span>';
+    const statusClass = i.status==='confirmado' ? 'badge-confirmado' : i.status==='cancelado' ? 'badge-cancelado' : 'badge-pendente';
+    const checkin = i.checkin ? `<span style="color:#2E7D32;font-weight:700;font-size:.8rem;">✓ Presente</span>` : `<button class="btn-status" style="border-color:#2E7D32;color:#2E7D32" onclick="marcarCheckin('${i.id}')">Marcar</button>`;
+
+    return `<tr>
+      <td style="color:var(--muted);font-weight:600">${n}</td>
+      <td style="font-weight:600">${i.nome||'—'}</td>
+      <td style="font-family:monospace">${i.cpf||'—'}</td>
+      <td>${i.whatsapp||'—'}</td>
+      <td style="font-size:.75rem">${i.email||'—'}</td>
+      <td style="font-size:.75rem;line-height:1.6">${palestras||'—'}</td>
+      <td style="font-size:.75rem">${i.minicurso||'—'}</td>
+      <td>${comp}</td>
+      <td>${checkin}</td>
+      <td>
+        <span class="badge ${statusClass}">${i.status||'pendente'}</span><br>
+        <button class="btn-status" style="margin-top:4px" onclick="alterarStatus('${i.id}','${i.status||'pendente'}')">Alterar</button>
+        <button class="btn-status" style="margin-top:4px;border-color:#C62828;color:#C62828" onclick="deletarInscricao('${i.id}','${(i.nome||'').replace(/'/g,"\\'")}')">Apagar</button>
+      </td>
+      <td style="font-family:monospace;font-size:.72rem">${i.protocolo||'—'}</td>
+      <td style="font-size:.75rem;white-space:nowrap">${data}<br>${hora}</td>
+    </tr>`;
+  }).join('');
+
+  const total = filtrados.length;
+  document.getElementById('pag-info').textContent = `${inicio+1}–${Math.min(fim,total)} de ${total} inscrições`;
+  document.getElementById('btn-prev').disabled = pagina === 0;
+  document.getElementById('btn-next').disabled = fim >= total;
+}
+
+function pagAnterior() { if(pagina>0){pagina--;renderTabela();} }
+function pagProxima() { if((pagina+1)*POR_PAG<filtrados.length){pagina++;renderTabela();} }
+
+// ── CHECK-IN ──
+async function marcarCheckin(id) {
+  const { error } = await sb.from('inscricoes').update({ checkin: true }).eq('id', id);
+  if (error) { alert('Erro: ' + error.message); return; }
+  const item = todos.find(i => i.id === id);
+  if (item) item.checkin = true;
+  renderTabela();
+}
+
+// ── ALTERAR STATUS ──
+async function alterarStatus(id, statusAtual) {
+  const opcoes = ['pendente','confirmado','cancelado'].filter(s => s !== statusAtual);
+  const novo = prompt(`Status atual: ${statusAtual}\n\nEscolha o novo status:\n1. ${opcoes[0]}\n2. ${opcoes[1]}\n\nDigite 1 ou 2:`);
+  if (!novo) return;
+  const novoStatus = opcoes[parseInt(novo)-1];
+  if (!novoStatus) { alert('Opção inválida.'); return; }
+  const { error } = await sb.from('inscricoes').update({ status: novoStatus }).eq('id', id);
+  if (error) { alert('Erro: ' + error.message); return; }
+  const item = todos.find(i => i.id === id);
+  if (item) item.status = novoStatus;
+  atualizarStats();
+  renderVagas();
+  filtrar();
+}
+
+// ── DELETAR ──
+async function deletarInscricao(id, nome) {
+  if (!confirm(`Tem certeza que deseja APAGAR permanentemente a inscrição de:\n\n${nome}\n\nEssa ação não pode ser desfeita e a vaga voltará disponível.`)) return;
+  const { error } = await sb.from('inscricoes').delete().eq('id', id);
+  if (error) { alert('Erro ao apagar: ' + error.message); return; }
+  todos = todos.filter(i => i.id !== id);
+  atualizarStats();
+  renderVagas();
+  popularFiltros();
+  filtrar();
+  alert('Inscrição apagada. A vaga está disponível novamente.');
+}
+
+// ── EXPORTAR LISTA GERAL CSV ──
+function baixarCSV(nome, linhas) {
+  const csv = linhas.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportarCSV() {
+  const header = ['#','Nome','CPF','Nascimento','Cidade','WhatsApp','Email','Palestras','Minicurso','Check-in','Status','Protocolo','Data'];
+  const rows = filtrados.map((i,idx) => [
+    idx+1, `"${i.nome||''}"`, i.cpf||'', i.nascimento||'', `"${i.cidade||''}"`,
+    i.whatsapp||'', i.email||'', `"${(i.palestras||[]).join(' | ')}"`,
+    `"${i.minicurso||''}"`, i.checkin?'Sim':'Não', i.status||'pendente',
+    i.protocolo||'', new Date(i.criado_em).toLocaleString('pt-BR')
+  ]);
+  baixarCSV(`lista_geral_sis_${new Date().toISOString().slice(0,10)}.csv`, [header,...rows]);
+}
+
+// ── EXPORTAR LISTA POR PALESTRA (pra porta da sala) ──
+function exportarListaPalestra() {
+  const ativos = todos.filter(i => i.status !== 'cancelado');
+  const palestras = [...new Set(ativos.flatMap(i => i.palestras||[]))].sort();
+  let linhas = [];
+  palestras.forEach(p => {
+    linhas.push([`"=== ${p} ==="`,'','','','']);
+    linhas.push(['"#"','"Nome Completo"','"CPF"','"WhatsApp"','"Assinatura"']);
+    const inscritos = ativos.filter(i => (i.palestras||[]).includes(p));
+    inscritos.forEach((i,idx) => {
+      linhas.push([idx+1, `"${i.nome||''}"`, i.cpf||'', i.whatsapp||'', '']);
+    });
+    linhas.push(['','','','','']);
+  });
+  baixarCSV(`lista_por_palestra_${new Date().toISOString().slice(0,10)}.csv`, linhas);
+}
+
+// ── EXPORTAR LISTA POR MINICURSO (pra porta da sala) ──
+function exportarListaMinicurso() {
+  const ativos = todos.filter(i => i.status !== 'cancelado');
+  const minicursos = [...new Set(ativos.map(i => i.minicurso).filter(Boolean))].sort();
+  let linhas = [];
+  minicursos.forEach(m => {
+    linhas.push([`"=== ${m} ==="`,'','','','']);
+    linhas.push(['"#"','"Nome Completo"','"CPF"','"WhatsApp"','"Assinatura"']);
+    const inscritos = ativos.filter(i => i.minicurso === m);
+    inscritos.forEach((i,idx) => {
+      linhas.push([idx+1, `"${i.nome||''}"`, i.cpf||'', i.whatsapp||'', '']);
+    });
+    linhas.push(['','','','','']);
+  });
+  baixarCSV(`lista_por_minicurso_${new Date().toISOString().slice(0,10)}.csv`, linhas);
+}
+
+function fecharModal() { document.getElementById('modal').classList.remove('open'); }
+
+if (!sessionStorage.getItem('sis_admin')) {
+  document.getElementById('login-screen').style.display = 'flex';
+} else {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  carregar();
+}
+</script>
+</body>
+</html>
